@@ -20,26 +20,92 @@ const list = [
     },
 ];
 
+const Button = ({ onClick, className='', children }) =>
+    <button className={className} onClick={onClick} type="button">
+        { children }
+    </button>;
+
+const isSearched = searchTerm => item =>
+    item.title.toLowerCase().includes(searchTerm.toLowerCase());
+
+const Search = ({ value, onChange, children }) =>
+    <form>
+        { children }
+        <input
+            type="text"
+            value={value}
+            onChange={onChange}
+        />
+    </form>;
+
+const Table = ({list, pattern, onDismiss}) =>
+    <div className="table">
+        {list.filter(isSearched(pattern)).map(item =>
+            <div key={item.objectID} className="table-row">
+                <span style={{ width: '40%' }}>
+                    <a href={item.url}>{item.title}</a>
+                </span>
+                <span style={{ width: '30%' }}>
+                    {item.author}
+                </span>
+                <span style={{ width: '10%' }}>
+                    {item.num_comments}
+                    </span>
+                <span style={{ width: '10%' }}>
+                    {item.points}
+                    </span>
+                <span style={{ width: '10%' }}>
+                    <Button
+                        onClick={() => onDismiss(item.objectID)}
+                        className="button-inline"
+                    >
+                        Dismiss
+                    </Button>
+                </span>
+            </div>
+        )}
+    </div>;
 
 class App extends Component {
-  render() {
-    return (
-      <div className="App">
-          <table>
-              {list.map(item =>
-                  <tr key={item.objectID}>
-                  <td>
-                      <a href={item.url}>{item.title}</a>
-                  </td>
-                      <td>{item.author}</td>
-                      <td>{item.num_comments}</td>
-                      <td>{item.points}</td>
-                  </tr>
-              )}
-          </table>
-      </div>
-    );
-  }
+
+    constructor(props) {
+        super(props);
+
+        this.state = {
+            list,
+            searchTerm: '',
+        };
+
+        this.onDismiss = this.onDismiss.bind(this);
+        this.onSearchChange = this.onSearchChange.bind(this);
+    }
+
+    onDismiss(id) {
+        const isNotId = item => item.objectID !== id;
+        const updatedList = this.state.list.filter(isNotId);
+        this.setState({ list: updatedList });
+    }
+
+    onSearchChange(event) {
+        this.setState({ searchTerm: event.target.value })
+    }
+
+    render() {
+        const { list, searchTerm } = this.state;
+
+        return (
+        <div className="App">
+            <div className="page">
+                <div className="interactions">
+                    <Search value={searchTerm} onChange={this.onSearchChange}>
+                        Search
+                    </Search>
+                </div>
+                <Table list={list} pattern={searchTerm} onDismiss={this.onDismiss}/>
+            </div>
+        </div>
+        );
+    }
 }
 
 export default App;
