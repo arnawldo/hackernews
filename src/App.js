@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
+import Proptypes from 'prop-types';
 import './App.css';
 
 const DEFAULT_QUERY = 'redux';
@@ -31,10 +32,24 @@ const list = [
     },
 ];
 
-const Button = ({ onClick, className='', children }) =>
+const Button = ({
+                    onClick,
+                    className,
+                    children
+}) =>
     <button className={className} onClick={onClick} type="button">
         { children }
     </button>;
+
+Button.propTypes = {
+    onClick: Proptypes.func.isRequired,
+    className: Proptypes.string,
+    children: Proptypes.node.isRequired,
+};
+
+Button.defaultProps = {
+    className: '',
+};
 
 const isSearched = searchTerm => item =>
     item.title.toLowerCase().includes(searchTerm.toLowerCase());
@@ -83,6 +98,11 @@ const Table = ({list, onDismiss}) =>
             </div>
         )}
     </div>;
+
+    Table.propTypes = {
+        list: Proptypes.array.isRequired,
+        onDismiss: Proptypes.func.isRequired,
+    };
 
 class App extends Component {
     _isMounted = false;
@@ -229,3 +249,9 @@ class App extends Component {
 }
 
 export default App;
+
+export {
+    Button,
+    Search,
+    Table
+};
