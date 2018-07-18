@@ -1,7 +1,12 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import Proptypes from 'prop-types';
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faSpinner } from '@fortawesome/free-solid-svg-icons'
 import './App.css';
+
+library.add(faSpinner);
 
 const DEFAULT_QUERY = 'redux';
 const DEFAULT_HPP = '100';
@@ -54,22 +59,39 @@ Button.defaultProps = {
 const isSearched = searchTerm => item =>
     item.title.toLowerCase().includes(searchTerm.toLowerCase());
 
-const Search = ({
-                    value,
-                    onChange,
-                    onSubmit,
-                    children
-}) =>
-    <form onSubmit={onSubmit}>
-        <input
-            type="text"
-            value={value}
-            onChange={onChange}
-        />
-        <button type="submit">
-            { children }
-        </button>
-    </form>;
+const Loading = () =>
+    <FontAwesomeIcon icon="spinner" />
+
+class Search extends Component {
+
+    componentDidMount() {
+        if (this.input) {
+            this.input.focus();
+        }
+    }
+    render() {
+        const {
+            value,
+            onChange,
+            onSubmit,
+            children
+        } = this.props;
+
+        return (
+            <form onSubmit={onSubmit}>
+                <input
+                    type="text"
+                    value={value}
+                    onChange={onChange}
+                    ref={(node) => { this.input = node; }}
+                />
+                <button type="submit">
+                    { children }
+                </button>
+            </form>
+        )
+    }
+}
 
 const Table = ({list, onDismiss}) =>
     <div className="table">
@@ -115,6 +137,7 @@ class App extends Component {
             searchKey: '',
             searchTerm: DEFAULT_QUERY,
             error: null,
+            isLoading: false,
         };
 
         this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
@@ -144,11 +167,14 @@ class App extends Component {
             results: {
                 ...results,
                 [searchKey]: { hits: updatedHits, page }
-            }
+            },
+            isLoading: false,
         });
     }
 
     fetchSearchTopStories(searchTerm, page=0) {
+        this.setState({ isLoading: true });
+
         axios(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
             .then(result => this._isMounted && this.setSearchTopStories(result.data))
             .catch(error => this._isMounted && this.setState({ error }));
@@ -198,7 +224,8 @@ class App extends Component {
             results,
             searchTerm,
             searchKey,
-            error
+            error,
+            isLoading,
         } = this.state;
 
         const page = (
@@ -236,11 +263,15 @@ class App extends Component {
                 }
 
                 <div className="interactions">
-                    <Button
-                        onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}
-                    >
-                        More
-                    </Button>
+                    { isLoading
+                        ? <Loading/>
+                        : <Button
+                            onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}
+                        >
+                            More
+                        </Button>
+                    }
+
                 </div>
             </div>
         </div>
